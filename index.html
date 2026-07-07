@@ -10,7 +10,7 @@
     <style>
         body {
             font-family: 'Nunito', sans-serif;
-            background-color: #fdf2f8; /* Soft pink background */
+            background-color: #fdf2f8;
             background-image: radial-gradient(#fbcfe8 1px, transparent 1px);
             background-size: 20px 20px;
         }
@@ -18,35 +18,25 @@
             font-family: 'Pacifico', cursive;
         }
         
-        /* 3D Card Flip Styles */
-        .perspective-1000 {
-            perspective: 1000px;
-        }
-        .transform-style-3d {
-            transform-style: preserve-3d;
-        }
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden {
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
         }
-        .rotate-y-180 {
-            transform: rotateY(180deg);
-        }
+        .rotate-y-180 { transform: rotateY(180deg); }
         
-        .card-inner {
-            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
-        }
+        .card-inner { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
         
-        /* Responsive Grid sizing */
         .game-grid {
             display: grid;
             gap: 0.5rem;
-            grid-template-columns: repeat(4, 1fr); /* Mobile default */
+            grid-template-columns: repeat(4, 1fr);
         }
         
         @media (min-width: 640px) {
             .game-grid {
-                grid-template-columns: repeat(6, 1fr); /* 6x6 on larger screens */
+                grid-template-columns: repeat(6, 1fr);
                 gap: 0.75rem;
             }
         }
@@ -56,58 +46,61 @@
             cursor: pointer;
         }
 
-        /* Sweet Alert / Modal custom animation */
         @keyframes popIn {
             0% { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-        .animate-pop {
-            animation: popIn 0.5s ease-out forwards;
+        .animate-pop { animation: popIn 0.5s ease-out forwards; }
+        
+        /* Efecto de deshabilitado cuando no es tu turno */
+        .not-my-turn {
+            opacity: 0.8;
+            pointer-events: none;
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <!-- Pantalla de Inicio -->
-    <div id="start-screen" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 text-center animate-pop">
-        <div class="text-rose-500 text-5xl mb-4">
-            <i class="fa-solid fa-heart-pulse"></i>
-        </div>
-        <h1 class="text-4xl text-rose-600 mb-6 leading-tight">Nuestro Viaje <br> de Amor</h1>
-        <p class="text-gray-600 mb-8">Un juego de memoria para revivir nuestros mejores momentos.</p>
-        
-        <div class="space-y-4 mb-8 text-left">
-            <div>
-                <label class="block text-sm font-bold text-rose-400 mb-1">Jugador 1</label>
-                <input type="text" id="player1-input" value="Angy" class="w-full px-4 py-2 border-2 border-rose-200 rounded-xl focus:outline-none focus:border-rose-500 transition">
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-rose-400 mb-1">Jugador 2</label>
-                <input type="text" id="player2-input" value="Jonas" class="w-full px-4 py-2 border-2 border-rose-200 rounded-xl focus:outline-none focus:border-rose-500 transition">
-            </div>
-        </div>
-        
-        <button onclick="startGame()" class="w-full bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold py-3 px-6 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300">
-            ¡Comenzar a Jugar! <i class="fa-solid fa-play ml-2"></i>
-        </button>
+    <!-- Pantalla de Carga de Firebase -->
+    <div id="loading-screen" class="fixed inset-0 bg-[#fdf2f8] z-50 flex flex-col items-center justify-center">
+        <i class="fa-solid fa-heart fa-beat text-5xl text-rose-500 mb-4"></i>
+        <h2 class="text-2xl text-rose-600 romantic-font">Conectando nuestros corazones...</h2>
+        <p class="text-gray-500 mt-2">Sincronizando el juego online</p>
     </div>
 
-    <!-- Pantalla del Juego (Oculta al inicio) -->
-    <div id="game-screen" class="w-full max-w-4xl hidden flex-col items-center">
+    <!-- Pantalla de Selección de Personaje -->
+    <div id="role-screen" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 text-center animate-pop hidden">
+        <div class="text-rose-500 text-5xl mb-4">
+            <i class="fa-solid fa-earth-americas"></i>
+        </div>
+        <h1 class="text-4xl text-rose-600 mb-6 leading-tight">Nuestro Viaje <br> de Amor</h1>
+        <p class="text-gray-600 mb-8 font-semibold">¿Quién se está conectando para jugar?</p>
         
+        <div class="space-y-4">
+            <button onclick="selectRole(1)" class="w-full bg-pink-100 hover:bg-pink-200 border-2 border-pink-300 text-pink-700 font-bold py-4 px-6 rounded-xl transition-all duration-300 text-xl flex items-center justify-center gap-3">
+                <i class="fa-solid fa-user-astronaut"></i> Soy Angy
+            </button>
+            <button onclick="selectRole(2)" class="w-full bg-blue-100 hover:bg-blue-200 border-2 border-blue-300 text-blue-700 font-bold py-4 px-6 rounded-xl transition-all duration-300 text-xl flex items-center justify-center gap-3">
+                <i class="fa-solid fa-user-ninja"></i> Soy Jonas
+            </button>
+        </div>
+    </div>
+
+    <!-- Pantalla del Juego -->
+    <div id="game-screen" class="w-full max-w-4xl hidden flex-col items-center">
         <!-- Cabecera y Puntuaciones -->
-        <div class="w-full bg-white rounded-2xl shadow-md p-4 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="w-full bg-white rounded-2xl shadow-md p-4 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 border-b-4 border-rose-300">
             <div class="text-center sm:text-left flex-1">
                 <h1 class="text-2xl text-rose-500 romantic-font">Angy y Jonas</h1>
-                <p class="text-xs text-gray-400">Encuentra nuestras aventuras juntos</p>
+                <p class="text-xs text-gray-400 font-bold" id="my-identity-label">Jugando como: ...</p>
             </div>
             
             <div class="flex items-center gap-6 flex-1 justify-center">
-                <!-- Puntaje Jugador 1 -->
+                <!-- Puntaje Angy -->
                 <div id="p1-board" class="flex flex-col items-center p-2 rounded-xl transition-colors duration-300 border-2 border-transparent">
-                    <span id="p1-name-display" class="font-bold text-gray-700">Angy</span>
+                    <span class="font-bold text-gray-700">Angy</span>
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-star text-yellow-400"></i>
+                        <i class="fa-solid fa-heart text-rose-400"></i>
                         <span id="p1-score" class="text-xl font-bold text-rose-500">0</span>
                     </div>
                     <span class="text-xs text-gray-400" id="p1-wins">Victorias: 0</span>
@@ -117,11 +110,11 @@
                     <i class="fa-solid fa-bolt"></i>
                 </div>
 
-                <!-- Puntaje Jugador 2 -->
+                <!-- Puntaje Jonas -->
                 <div id="p2-board" class="flex flex-col items-center p-2 rounded-xl transition-colors duration-300 border-2 border-transparent">
-                    <span id="p2-name-display" class="font-bold text-gray-700">Jonas</span>
+                    <span class="font-bold text-gray-700">Jonas</span>
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-star text-yellow-400"></i>
+                        <i class="fa-solid fa-heart text-rose-400"></i>
                         <span id="p2-score" class="text-xl font-bold text-rose-500">0</span>
                     </div>
                     <span class="text-xs text-gray-400" id="p2-wins">Victorias: 0</span>
@@ -129,250 +122,365 @@
             </div>
 
             <div class="flex-1 flex justify-end">
-                <button onclick="resetGame()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold transition">
+                <button onclick="showResetConfirm()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold transition">
                     <i class="fa-solid fa-rotate-right mr-1"></i> Reiniciar
                 </button>
             </div>
         </div>
 
         <!-- Indicador de Turno -->
-        <div class="mb-4 bg-rose-100 text-rose-600 px-6 py-2 rounded-full font-bold shadow-sm animate-pulse" id="turn-indicator">
-            ¡Es el turno de Angy!
+        <div class="mb-4 bg-rose-100 text-rose-700 px-6 py-2 rounded-full font-bold shadow-sm transition-all" id="turn-indicator">
+            Esperando estado del juego...
         </div>
 
-        <!-- Cuadrícula del Juego (6x6) -->
-        <div id="grid" class="game-grid w-full max-w-3xl perspective-1000">
-            <!-- Las cartas se inyectarán aquí con JavaScript -->
+        <!-- Cuadrícula del Juego -->
+        <div id="grid-container" class="w-full flex justify-center">
+            <div id="grid" class="game-grid w-full max-w-3xl perspective-1000">
+                <!-- Cartas inyectadas por JS -->
+            </div>
         </div>
     </div>
 
     <!-- Modal de Victoria -->
     <div id="win-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center relative overflow-hidden">
-            <!-- Confeti decorativo (CSS puro) -->
             <div class="absolute -top-10 -left-10 text-6xl text-pink-300 opacity-50 rotate-12"><i class="fa-solid fa-heart"></i></div>
             <div class="absolute -bottom-10 -right-10 text-6xl text-rose-300 opacity-50 -rotate-12"><i class="fa-solid fa-heart"></i></div>
             
             <h2 id="win-title" class="text-4xl text-rose-600 romantic-font mb-4 mt-4">¡Tenemos un ganador!</h2>
             <p id="win-message" class="text-xl text-gray-700 mb-8 font-semibold"></p>
             
-            <button onclick="playAgain()" class="bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold py-3 px-8 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300">
+            <button onclick="initializeBoardOnDB()" class="bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold py-3 px-8 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300">
                 Jugar de Nuevo <i class="fa-solid fa-heart ml-2"></i>
             </button>
         </div>
     </div>
 
-    <script>
-        // Variables de estado del juego
-        let player1 = { name: "Angy", score: 0, wins: 0 };
-        let player2 = { name: "Jonas", score: 0, wins: 0 };
-        let currentTurn = 1; // 1 para Jugador 1, 2 para Jugador 2
-        
-        const totalPairs = 18; // 6x6 grid = 36 cards = 18 pairs
-        let cards = [];
-        let flippedCards = [];
-        let lockBoard = false;
-        let matchedPairsCount = 0;
+    <!-- Modal de Confirmación de Reinicio -->
+    <div id="reset-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-xl p-8 max-w-sm w-full text-center">
+            <i class="fa-solid fa-triangle-exclamation text-4xl text-yellow-500 mb-4"></i>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">¿Reiniciar partida?</h3>
+            <p class="text-gray-600 mb-6">Esto reiniciará el tablero para ambos jugadores en este momento.</p>
+            <div class="flex gap-4 justify-center">
+                <button onclick="hideResetConfirm()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-bold text-gray-700 transition">Cancelar</button>
+                <button onclick="confirmReset()" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 rounded-lg font-bold text-white transition">Sí, reiniciar</button>
+            </div>
+        </div>
+    </div>
 
-        // Referencias al DOM
-        const startScreen = document.getElementById('start-screen');
+    <!-- Script principal con Firebase y Lógica Multijugador -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuración Firebase del entorno inmersivo
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Variables Globales
+        let myRole = null; // 1 (Angy) o 2 (Jonas)
+        let gameDocRef = null;
+        let globalGameState = null;
+        const totalPairs = 18; // 36 cartas
+
+        // Referencias DOM
+        const loadingScreen = document.getElementById('loading-screen');
+        const roleScreen = document.getElementById('role-screen');
         const gameScreen = document.getElementById('game-screen');
         const grid = document.getElementById('grid');
+        const gridContainer = document.getElementById('grid-container');
         const turnIndicator = document.getElementById('turn-indicator');
         const winModal = document.getElementById('win-modal');
+        const resetModal = document.getElementById('reset-modal');
+        const myIdentityLabel = document.getElementById('my-identity-label');
 
-        // Función para iniciar el juego desde la pantalla de inicio
-        function startGame() {
-            const p1Input = document.getElementById('player1-input').value.trim();
-            const p2Input = document.getElementById('player2-input').value.trim();
-            
-            if (p1Input) player1.name = p1Input;
-            if (p2Input) player2.name = p2Input;
+        // 1. Inicializar Autenticación y luego mostrar selección de rol
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Error de autenticación:", error);
+                turnIndicator.innerText = "Error de conexión. Intenta recargar la página.";
+            }
+        }
 
-            document.getElementById('p1-name-display').innerText = player1.name;
-            document.getElementById('p2-name-display').innerText = player2.name;
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Autenticado correctamente
+                loadingScreen.classList.add('hidden');
+                roleScreen.classList.remove('hidden');
+                
+                // Configurar la referencia del documento compartido (Path estricto cumpliendo la regla)
+                // Usamos un ID fijo de sala "angy_jonas_room" para que ambos se conecten al mismo juego automáticamente.
+                gameDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', 'angy_jonas_room');
+            }
+        });
 
-            startScreen.classList.add('hidden');
+        initAuth();
+
+        // 2. Selección de Rol e inicio de escucha a la base de datos
+        window.selectRole = (roleNum) => {
+            myRole = roleNum;
+            roleScreen.classList.add('hidden');
             gameScreen.classList.remove('hidden');
             gameScreen.classList.add('flex');
-
-            initBoard();
-        }
-
-        // Inicializar o reiniciar la mesa
-        function initBoard() {
-            grid.innerHTML = '';
-            cards = [];
-            flippedCards = [];
-            lockBoard = false;
-            matchedPairsCount = 0;
-            player1.score = 0;
-            player2.score = 0;
-            currentTurn = 1; // Siempre empieza el jugador 1
-
-            updateScoreBoard();
-
-            // Crear array de parejas (1 al 18, dos veces)
-            for (let i = 1; i <= totalPairs; i++) {
-                cards.push(i, i);
-            }
-
-            // Mezclar cartas (Algoritmo Fisher-Yates)
-            for (let i = cards.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [cards[i], cards[j]] = [cards[j], cards[i]];
-            }
-
-            // Renderizar cartas en el DOM
-            cards.forEach((cardValue, index) => {
-                const cardEl = document.createElement('div');
-                cardEl.classList.add('card');
-                cardEl.dataset.value = cardValue;
-                cardEl.dataset.index = index;
-
-                // Estructura HTML de la carta (Frente y Reverso)
-                cardEl.innerHTML = `
-                    <div class="card-inner w-full h-full relative transform-style-3d shadow-sm hover:shadow-md rounded-xl">
-                        <!-- Parte Trasera (La que se ve antes de voltear) -->
-                        <div class="card-back absolute w-full h-full bg-gradient-to-br from-pink-200 to-rose-300 rounded-xl flex items-center justify-center backface-hidden border-2 border-white">
-                            <i class="fa-solid fa-heart text-white text-3xl opacity-80"></i>
-                        </div>
-                        <!-- Parte Frontal (La imagen, rotada 180deg por defecto en CSS) -->
-                        <div class="card-front absolute w-full h-full bg-white rounded-xl backface-hidden rotate-y-180 overflow-hidden border-2 border-rose-200">
-                            <img src="Carta${cardValue}.jpg" 
-                                 onerror="this.onerror=null; this.src='https://placehold.co/200x200/ffe4e6/e11d48?text=Amor+${cardValue}'; this.parentElement.classList.add('p-2');" 
-                                 class="w-full h-full object-cover" 
-                                 alt="Memoria ${cardValue}">
-                        </div>
-                    </div>
-                `;
-
-                cardEl.addEventListener('click', () => flipCard(cardEl));
-                grid.appendChild(cardEl);
-            });
-        }
-
-        // Lógica para voltear carta
-        function flipCard(cardEl) {
-            // Prevenir clicks si el tablero está bloqueado, si la carta ya está volteada o emparejada
-            if (lockBoard) return;
-            if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
-
-            // Añadir clase para la animación CSS
-            cardEl.querySelector('.card-inner').classList.add('rotate-y-180');
-            cardEl.classList.add('flipped');
-
-            flippedCards.push(cardEl);
-
-            if (flippedCards.length === 2) {
-                checkForMatch();
-            }
-        }
-
-        function checkForMatch() {
-            lockBoard = true;
-            const [card1, card2] = flippedCards;
-            const match = card1.dataset.value === card2.dataset.value;
-
-            if (match) {
-                // Hay coincidencia
-                card1.classList.add('matched');
-                card2.classList.add('matched');
-                matchedPairsCount++;
-
-                // Aumentar puntuación del jugador actual
-                if (currentTurn === 1) {
-                    player1.score++;
-                } else {
-                    player2.score++;
-                }
-
-                updateScoreBoard();
-                
-                // Limpiar estado y verificar victoria. 
-                // NOTA: El turno NO cambia porque acertaron.
-                flippedCards = [];
-                lockBoard = false;
-
-                if (matchedPairsCount === totalPairs) {
-                    setTimeout(endGame, 500);
-                }
-
-            } else {
-                // No hay coincidencia, voltear de nuevo después de 1 segundo
-                setTimeout(() => {
-                    card1.querySelector('.card-inner').classList.remove('rotate-y-180');
-                    card2.querySelector('.card-inner').classList.remove('rotate-y-180');
-                    card1.classList.remove('flipped');
-                    card2.classList.remove('flipped');
-                    
-                    // Cambiar turno
-                    currentTurn = currentTurn === 1 ? 2 : 1;
-                    updateScoreBoard();
-                    
-                    flippedCards = [];
-                    lockBoard = false;
-                }, 1200);
-            }
-        }
-
-        function updateScoreBoard() {
-            document.getElementById('p1-score').innerText = player1.score;
-            document.getElementById('p2-score').innerText = player2.score;
             
-            document.getElementById('p1-wins').innerText = `Victorias: ${player1.wins}`;
-            document.getElementById('p2-wins').innerText = `Victorias: ${player2.wins}`;
+            myIdentityLabel.innerText = `Jugando como: ${myRole === 1 ? 'Angy' : 'Jonas'} ${myRole === 1 ? '👩🏻' : '👱🏼‍♂️'}`;
+
+            // Empezar a escuchar cambios en tiempo real
+            onSnapshot(gameDocRef, (docSnapshot) => {
+                if (!docSnapshot.exists()) {
+                    // Si el juego no existe en la nube, el primero que entra lo inicializa
+                    if(myRole === 1 || myRole === 2) {
+                        initializeBoardOnDB();
+                    }
+                } else {
+                    // Actualizar UI con los datos de la nube
+                    globalGameState = docSnapshot.data();
+                    renderGame(globalGameState);
+                }
+            }, (error) => {
+                console.error("Error escuchando BD:", error);
+            });
+        };
+
+        // 3. Crear un tablero nuevo y subirlo a Firebase
+        window.initializeBoardOnDB = async () => {
+            // Ocultar modal de victoria si estaba abierto
+            winModal.classList.add('hidden');
+            winModal.classList.remove('flex');
+
+            // Crear array de parejas y mezclar
+            let board = [];
+            for (let i = 1; i <= totalPairs; i++) {
+                board.push(i, i);
+            }
+            for (let i = board.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [board[i], board[j]] = [board[j], board[i]];
+            }
+
+            // Estado inicial de las cartas
+            let cardStates = board.map(() => ({ flipped: false, matched: false }));
+
+            // Conservar las victorias si ya existía el juego
+            let wins = { p1: 0, p2: 0 };
+            if (globalGameState && globalGameState.wins) {
+                wins = globalGameState.wins;
+            }
+
+            const newGameState = {
+                board: board,
+                cardStates: cardStates,
+                turn: 1, // Siempre empieza Angy (1)
+                scores: { p1: 0, p2: 0 },
+                wins: wins,
+                flippedCards: [],
+                lockBoard: false,
+                winner: null
+            };
+
+            await setDoc(gameDocRef, newGameState);
+        };
+
+        // 4. Renderizar el juego basado estrictamente en los datos de la nube
+        function renderGame(state) {
+            // Actualizar Marcadores
+            document.getElementById('p1-score').innerText = state.scores.p1;
+            document.getElementById('p2-score').innerText = state.scores.p2;
+            document.getElementById('p1-wins').innerText = `Victorias: ${state.wins.p1}`;
+            document.getElementById('p2-wins').innerText = `Victorias: ${state.wins.p2}`;
 
             const p1Board = document.getElementById('p1-board');
             const p2Board = document.getElementById('p2-board');
 
-            if (currentTurn === 1) {
-                turnIndicator.innerHTML = `¡Es el turno de ${player1.name}!`;
+            // Actualizar UI de turnos
+            if (state.turn === 1) {
+                turnIndicator.innerHTML = myRole === 1 ? '¡Es tu turno, Angy! 💖' : 'Turno de Angy... esperando movimiento ⏳';
+                turnIndicator.className = 'mb-4 px-6 py-2 rounded-full font-bold shadow-sm transition-all bg-rose-100 text-rose-700';
                 p1Board.classList.add('bg-rose-100', 'border-rose-300');
                 p2Board.classList.remove('bg-rose-100', 'border-rose-300');
             } else {
-                turnIndicator.innerHTML = `¡Es el turno de ${player2.name}!`;
-                p2Board.classList.add('bg-rose-100', 'border-rose-300');
-                p1Board.classList.remove('bg-rose-100', 'border-rose-300');
+                turnIndicator.innerHTML = myRole === 2 ? '¡Es tu turno, Jonas! 💖' : 'Turno de Jonas... esperando movimiento ⏳';
+                turnIndicator.className = 'mb-4 px-6 py-2 rounded-full font-bold shadow-sm transition-all bg-blue-100 text-blue-700';
+                p2Board.classList.add('bg-blue-100', 'border-blue-300');
+                p1Board.classList.remove('bg-blue-100', 'border-blue-300');
+            }
+
+            // Deshabilitar la cuadrícula si no es mi turno o si el tablero está bloqueado globalmente
+            if (state.turn !== myRole || state.lockBoard) {
+                gridContainer.classList.add('not-my-turn');
+            } else {
+                gridContainer.classList.remove('not-my-turn');
+            }
+
+            // Si es la primera vez que se renderiza el tablero o cambió por completo
+            if (grid.children.length === 0 || grid.children.length !== state.board.length) {
+                grid.innerHTML = '';
+                state.board.forEach((cardValue, index) => {
+                    const cardEl = document.createElement('div');
+                    cardEl.classList.add('card');
+                    cardEl.dataset.index = index;
+                    
+                    cardEl.innerHTML = `
+                        <div class="card-inner w-full h-full relative transform-style-3d shadow-sm hover:shadow-md rounded-xl transition-all duration-500">
+                            <div class="card-back absolute w-full h-full bg-gradient-to-br from-pink-200 to-rose-300 rounded-xl flex items-center justify-center backface-hidden border-2 border-white">
+                                <i class="fa-solid fa-heart text-white text-3xl opacity-80"></i>
+                            </div>
+                            <div class="card-front absolute w-full h-full bg-white rounded-xl backface-hidden rotate-y-180 overflow-hidden border-2 border-rose-200">
+                                <img src="./Carta${cardValue}.jpg" 
+                                     onerror="this.onerror=null; this.src='https://placehold.co/200x200/ffe4e6/e11d48?text=Amor+${cardValue}'; this.parentElement.classList.add('p-2');" 
+                                     class="w-full h-full object-cover" 
+                                     alt="Memoria ${cardValue}">
+                            </div>
+                        </div>
+                    `;
+                    cardEl.addEventListener('click', () => handleCardClick(index));
+                    grid.appendChild(cardEl);
+                });
+            }
+
+            // Actualizar el estado visual de cada carta existente
+            Array.from(grid.children).forEach((cardEl, index) => {
+                const inner = cardEl.querySelector('.card-inner');
+                const isFlipped = state.cardStates[index].flipped;
+                const isMatched = state.cardStates[index].matched;
+
+                if (isFlipped || isMatched) {
+                    inner.classList.add('rotate-y-180');
+                    if (isMatched) {
+                        inner.classList.add('opacity-50', 'scale-95'); // Efecto visual cuando ya encontraron pareja
+                    } else {
+                        inner.classList.remove('opacity-50', 'scale-95');
+                    }
+                } else {
+                    inner.classList.remove('rotate-y-180');
+                }
+            });
+
+            // Mostrar modal de victoria si el juego terminó
+            if (state.winner) {
+                showWinModal(state);
             }
         }
 
-        function endGame() {
+        // 5. Lógica al hacer clic en una carta
+        async function handleCardClick(index) {
+            // Validaciones de seguridad
+            if (!globalGameState) return;
+            if (globalGameState.turn !== myRole) return; // No es tu turno
+            if (globalGameState.lockBoard) return; // Tablero bloqueado temporalmente
+            if (globalGameState.cardStates[index].flipped || globalGameState.cardStates[index].matched) return; // Ya está volteada
+
+            // Clonar estado para actualizarlo
+            let newState = JSON.parse(JSON.stringify(globalGameState));
+            
+            // Voltear la carta
+            newState.cardStates[index].flipped = true;
+            newState.flippedCards.push(index);
+
+            if (newState.flippedCards.length === 1) {
+                // Solo se volteó una carta, actualizar BD
+                await setDoc(gameDocRef, newState);
+            } 
+            else if (newState.flippedCards.length === 2) {
+                // Se voltearon dos cartas. Bloqueamos el tablero inmediatamente en la BD
+                newState.lockBoard = true;
+                await setDoc(gameDocRef, newState);
+
+                // Solo el jugador que hizo el movimiento ejecuta la lógica de verificación después del timeout
+                const idx1 = newState.flippedCards[0];
+                const idx2 = newState.flippedCards[1];
+                const val1 = newState.board[idx1];
+                const val2 = newState.board[idx2];
+
+                setTimeout(async () => {
+                    // Refrescar el estado desde la variable global más reciente por seguridad
+                    let finalState = JSON.parse(JSON.stringify(globalGameState));
+                    finalState.flippedCards = [];
+                    finalState.lockBoard = false;
+
+                    if (val1 === val2) {
+                        // ¡Coincidencia!
+                        finalState.cardStates[idx1].matched = true;
+                        finalState.cardStates[idx2].matched = true;
+                        
+                        if (myRole === 1) finalState.scores.p1++;
+                        if (myRole === 2) finalState.scores.p2++;
+
+                        // Verificar si ganaron el juego (18 puntos totales)
+                        if (finalState.scores.p1 + finalState.scores.p2 === totalPairs) {
+                            if (finalState.scores.p1 > finalState.scores.p2) {
+                                finalState.winner = 1;
+                                finalState.wins.p1++;
+                            } else if (finalState.scores.p2 > finalState.scores.p1) {
+                                finalState.winner = 2;
+                                finalState.wins.p2++;
+                            } else {
+                                finalState.winner = 'draw';
+                            }
+                        }
+                        // Nota: el turno NO cambia porque acertaron
+                    } else {
+                        // Fallaron
+                        finalState.cardStates[idx1].flipped = false;
+                        finalState.cardStates[idx2].flipped = false;
+                        // Cambiar de turno
+                        finalState.turn = finalState.turn === 1 ? 2 : 1;
+                    }
+
+                    // Actualizar BD con el resultado
+                    await setDoc(gameDocRef, finalState);
+
+                }, 1200); // 1.2 segundos para ver las cartas antes de que pase la acción
+            }
+        }
+
+        // 6. Funciones de Interfaz (Modales)
+        function showWinModal(state) {
             const winTitle = document.getElementById('win-title');
             const winMessage = document.getElementById('win-message');
             
-            if (player1.score > player2.score) {
-                player1.wins++;
+            if (state.winner === 1) {
                 winTitle.innerText = "¡Felicidades!";
-                winMessage.innerHTML = `¡<span class="text-rose-500 font-bold">${player1.name}</span> has Ganado! <br><br> <span class="text-sm text-gray-500">No olvides que ${player2.name} te ama ❤️</span>`;
-            } else if (player2.score > player1.score) {
-                player2.wins++;
+                winMessage.innerHTML = `¡<span class="text-rose-500 font-bold">Angy</span> has Ganado! <br><br> <span class="text-sm text-gray-500">No olvides que Jonas te ama ❤️</span>`;
+            } else if (state.winner === 2) {
                 winTitle.innerText = "¡Felicidades!";
-                winMessage.innerHTML = `¡<span class="text-rose-500 font-bold">${player2.name}</span> has Ganado! <br><br> <span class="text-sm text-gray-500">No olvides que ${player1.name} te ama ❤️</span>`;
-            } else {
+                winMessage.innerHTML = `¡<span class="text-blue-500 font-bold">Jonas</span> has Ganado! <br><br> <span class="text-sm text-gray-500">No olvides que Angy te ama ❤️</span>`;
+            } else if (state.winner === 'draw') {
                 winTitle.innerText = "¡Un Empate Perfecto!";
                 winMessage.innerHTML = `Ambos tienen la misma puntuación. <br><br> <span class="text-sm text-gray-500">Su amor está perfectamente equilibrado ❤️</span>`;
             }
 
-            updateScoreBoard();
             winModal.classList.remove('hidden');
             winModal.classList.add('flex');
         }
 
-        function playAgain() {
-            winModal.classList.remove('flex');
-            winModal.classList.add('hidden');
-            initBoard();
-        }
+        window.showResetConfirm = () => {
+            resetModal.classList.remove('hidden');
+            resetModal.classList.add('flex');
+        };
 
-        function resetGame() {
-            if(confirm("¿Están seguros de que quieren reiniciar la partida actual?")) {
-                initBoard();
-            }
-        }
+        window.hideResetConfirm = () => {
+            resetModal.classList.add('hidden');
+            resetModal.classList.remove('flex');
+        };
+
+        window.confirmReset = () => {
+            hideResetConfirm();
+            initializeBoardOnDB();
+        };
 
     </script>
 </body>
 </html>
-
-```
