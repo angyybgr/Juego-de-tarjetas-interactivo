@@ -10,53 +10,68 @@
         .card { perspective: 1000px; cursor: pointer; }
         .card-inner { transition: transform 0.6s; transform-style: preserve-3d; }
         .card.flipped .card-inner { transform: rotateY(180deg); }
-        .card-front, .card-back { backface-visibility: hidden; position: absolute; width: 100%; height: 100%; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .card-front, .card-back { backface-visibility: hidden; position: absolute; width: 100%; height: 100%; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .card-back { transform: rotateY(180deg); background: white; border: 2px solid #ec4899; }
-        .card-front { background: linear-gradient(135deg, #ec4899, #db2777); color: white; font-size: 2rem; }
+        .card-front { background: linear-gradient(135deg, #f472b6, #db2777); color: white; font-size: 2rem; }
         img { width: 100%; height: 100%; object-fit: cover; }
+        .turn-active { transform: scale(1.05); border-color: #f472b6 !important; box-shadow: 0 0 15px rgba(244, 114, 182, 0.5); opacity: 1 !important; }
+        .turn-inactive { opacity: 0.6; transform: scale(0.95); }
     </style>
 </head>
-<body class="bg-rose-50 min-h-screen p-4 md:p-8 font-sans">
+<body class="bg-rose-50 min-h-screen p-2 md:p-8 font-sans">
 
     <div class="max-w-4xl mx-auto">
         <header class="text-center mb-6">
-            <h1 class="text-4xl font-bold text-pink-700">Angy y Jonas</h1>
-            <p class="text-pink-500 italic">Cada carta es un recuerdo juntos</p>
+            <h1 class="text-3xl md:text-5xl font-bold text-pink-700 mb-2">Angy y Jonas</h1>
+            <p class="text-pink-500 italic text-sm md:text-base">Encuentra nuestras aventuras juntas ❤️</p>
         </header>
 
-        <div class="grid grid-cols-2 gap-4 mb-8">
-            <div class="bg-white p-4 rounded-xl shadow-md border-b-4 border-pink-400 text-center">
-                <input type="text" id="p1-name" value="Angy" class="font-bold text-lg text-center w-full outline-none text-pink-600">
-                <div class="text-3xl font-black text-pink-500" id="p1-score">0</div>
+        <!-- Marcadores y Turnos -->
+        <div class="grid grid-cols-2 gap-4 mb-8 max-w-2xl mx-auto">
+            <div id="p1-board" class="bg-white p-3 rounded-xl border-4 border-transparent text-center transition-all duration-300 turn-active relative">
+                <span id="p1-indicator" class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">¡Tu turno!</span>
+                <input type="text" id="p1-name" value="Angy" class="font-bold text-lg md:text-xl text-center w-full outline-none text-pink-600 bg-transparent mt-2">
+                <div class="text-3xl md:text-4xl font-black text-pink-500" id="p1-score">0</div>
             </div>
-            <div class="bg-white p-4 rounded-xl shadow-md border-b-4 border-sky-400 text-center">
-                <input type="text" id="p2-name" value="Jonas" class="font-bold text-lg text-center w-full outline-none text-sky-600">
-                <div class="text-3xl font-black text-sky-500" id="p2-score">0</div>
+            
+            <div id="p2-board" class="bg-white p-3 rounded-xl border-4 border-transparent text-center transition-all duration-300 turn-inactive relative">
+                <span id="p2-indicator" class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-sky-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md hidden">¡Tu turno!</span>
+                <input type="text" id="p2-name" value="Jonas" class="font-bold text-lg md:text-xl text-center w-full outline-none text-sky-600 bg-transparent mt-2">
+                <div class="text-3xl md:text-4xl font-black text-sky-500" id="p2-score">0</div>
             </div>
         </div>
 
-        <div id="game-grid" class="grid grid-cols-6 gap-2 md:gap-4 max-w-3xl mx-auto"></div>
+        <!-- Cuadrícula del juego 6x6 -->
+        <div id="game-grid" class="grid grid-cols-6 gap-1 md:gap-3 max-w-3xl mx-auto"></div>
 
-        <div class="mt-8 text-center">
-            <button onclick="resetGame()" class="bg-pink-600 text-white px-8 py-3 rounded-full font-bold hover:bg-pink-700 transition shadow-lg transform hover:scale-105">Reiniciar Juego</button>
+        <div class="mt-8 text-center pb-8">
+            <button onclick="resetGame()" class="bg-pink-600 text-white px-8 py-3 rounded-full font-bold hover:bg-pink-700 transition shadow-lg transform hover:scale-105 active:scale-95">Reiniciar Juego</button>
+        </div>
+    </div>
+
+    <!-- Letrero Modal de Victoria -->
+    <div id="win-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm px-4">
+        <div class="bg-white p-8 rounded-3xl text-center max-w-md w-full shadow-2xl border-4 border-pink-400 transform transition-all">
+            <div class="text-5xl mb-4">🏆❤️</div>
+            <h2 id="win-title" class="text-3xl font-bold text-pink-600 mb-4"></h2>
+            <p id="win-message" class="text-xl text-gray-700 mb-8 font-medium leading-relaxed"></p>
+            <button onclick="closeModalAndReset()" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-3 rounded-full font-bold text-lg hover:from-pink-600 hover:to-rose-600 transition shadow-lg transform hover:scale-105">Volver a jugar</button>
         </div>
     </div>
 
     <script>
-        // URLs de tus artes chibi integradas
-        const sceneImages = [
-            'Carta1.jpg', 'Carta2.jpg', 'Carta3.jpg',
-            'Carta4.jpg', 'Carta5.jpg', 'Carta6.jpg',
-            'Carta7.jpg', 'Carta8.jpg', 'Carta9.jpg',
-            'Carta10.jpg', 'Carta11.jpg', 'Carta12.jpg',
-            'Carta13.jpg', 'Carta14.jpg', 'Carta15.jpg',
-            'Carta16.jpg', 'Carta17.jpg', 'Carta18.jpg'
-        ];
+        // Array de imágenes locales buscando en la misma carpeta raíz
+        // Esto creará rutas tipo: Carta1.jpg, Carta2.jpg ... Carta18.jpg
+        const sceneImages = [];
+        for (let i = 1; i <= 18; i++) {
+            sceneImages.push(`Carta${i}.jpg`);
+        }
 
         let cards = [...sceneImages, ...sceneImages];
         let flipped = [];
         let scores = { p1: 0, p2: 0 };
         let turn = 'p1';
+        let lockBoard = false;
 
         function createGrid() {
             const grid = document.getElementById('game-grid');
@@ -67,25 +82,54 @@
                 card.className = 'card w-full aspect-square';
                 card.innerHTML = `
                     <div class="card-inner w-full h-full relative">
-                        <div class="card-front">💖</div>
-                        <div class="card-back"><img src="${imgSrc}" alt="Momento Romántico"></div>
+                        <div class="card-front">❤️</div>
+                        <div class="card-back">
+                            <!-- Si la imagen no se encuentra, mostrará un cuadrado de error -->
+                            <img src="${imgSrc}" alt="Momento Romántico" loading="lazy" onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%23ffcccc%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 fill=%22%23ff0000%22 font-size=%2210%22 font-family=%22Arial%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EError%3C/text%3E%3C/svg%3E'">
+                        </div>
                     </div>
                 `;
                 card.onclick = () => flipCard(card, index);
                 grid.appendChild(card);
             });
+            updateTurnUI();
+        }
+
+        function updateTurnUI() {
+            const p1Board = document.getElementById('p1-board');
+            const p2Board = document.getElementById('p2-board');
+            const p1Ind = document.getElementById('p1-indicator');
+            const p2Ind = document.getElementById('p2-indicator');
+
+            if (turn === 'p1') {
+                p1Board.classList.replace('turn-inactive', 'turn-active');
+                p2Board.classList.replace('turn-active', 'turn-inactive');
+                p1Ind.classList.remove('hidden');
+                p2Ind.classList.add('hidden');
+            } else {
+                p2Board.classList.replace('turn-inactive', 'turn-active');
+                p1Board.classList.replace('turn-active', 'turn-inactive');
+                p2Ind.classList.remove('hidden');
+                p1Ind.classList.add('hidden');
+            }
         }
 
         function flipCard(card, index) {
-            if (flipped.length < 2 && !card.classList.contains('flipped')) {
-                card.classList.add('flipped');
-                flipped.push({ card, imgSrc: cards[index] });
-                if (flipped.length === 2) setTimeout(checkMatch, 800);
+            if (lockBoard) return;
+            if (card.classList.contains('flipped')) return;
+
+            card.classList.add('flipped');
+            flipped.push({ card, imgSrc: cards[index] });
+
+            if (flipped.length === 2) {
+                lockBoard = true;
+                setTimeout(checkMatch, 1000);
             }
         }
 
         function checkMatch() {
             const [c1, c2] = flipped;
+            
             if (c1.imgSrc === c2.imgSrc) {
                 scores[turn]++;
                 document.getElementById(`${turn}-score`).innerText = scores[turn];
@@ -94,17 +138,41 @@
                 c2.card.classList.remove('flipped');
                 turn = turn === 'p1' ? 'p2' : 'p1';
             }
+            
             flipped = [];
+            lockBoard = false;
+            updateTurnUI();
             checkWin();
         }
 
         function checkWin() {
             if (document.querySelectorAll('.flipped').length === 36) {
-                const p1 = document.getElementById('p1-name').value;
-                const p2 = document.getElementById('p2-name').value;
-                const msg = scores.p1 > scores.p2 ? `¡Ganó ${p1}!` : (scores.p2 > scores.p1 ? `¡Ganó ${p2}!` : "¡Es un empate!");
-                setTimeout(() => alert(`¡Juego terminado! ${msg}`), 500);
+                const p1Name = document.getElementById('p1-name').value || 'Jugador 1';
+                const p2Name = document.getElementById('p2-name').value || 'Jugador 2';
+                
+                let title = "";
+                let msg = "";
+
+                if (scores.p1 > scores.p2) {
+                    title = "¡Felicidades!";
+                    msg = `¡${p1Name} has Ganado!<br><br>No olvides que ${p2Name} te ama ❤️`;
+                } else if (scores.p2 > scores.p1) {
+                    title = "¡Felicidades!";
+                    msg = `¡${p2Name} has Ganado!<br><br>No olvides que ${p1Name} te ama ❤️`;
+                } else {
+                    title = "¡Qué conexión!";
+                    msg = `¡Es un empate perfecto!<br><br>Su amor está perfectamente equilibrado ❤️`;
+                }
+
+                document.getElementById('win-title').innerHTML = title;
+                document.getElementById('win-message').innerHTML = msg;
+                document.getElementById('win-modal').classList.remove('hidden');
             }
+        }
+
+        function closeModalAndReset() {
+            document.getElementById('win-modal').classList.add('hidden');
+            resetGame();
         }
 
         function resetGame() {
@@ -112,6 +180,8 @@
             scores = { p1: 0, p2: 0 };
             document.getElementById('p1-score').innerText = 0;
             document.getElementById('p2-score').innerText = 0;
+            turn = 'p1';
+            lockBoard = false;
             createGrid();
         }
 
@@ -120,4 +190,6 @@
 </body>
 </html>
 
+
 ```
+
